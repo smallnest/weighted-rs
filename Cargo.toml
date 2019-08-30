@@ -1,0 +1,15 @@
+[package]
+name = "weighted-rs"
+version = "0.1.0"
+authors = ["smallnest@gmail.com"]
+license = "MIT"
+readme = "README.md"
+description = "A libray for weighted balancing algorithm."
+repository = "https://github.com/smallnest/weighted-rs"
+documentation = "https://docs.rs/weighted-rs/"
+homepage = "https://crates.io/crates/weighted-rs"
+keywords = ["weight", "weighted", "balancing"]
+categories = ["algorithms"]
+edition = "2018"
+
+[dependencies]
