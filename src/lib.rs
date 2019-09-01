@@ -17,8 +17,6 @@
 //!     sw.add("server2", 2);
 //!     sw.add("server3", 3);
 //!
-//!     let mut results: HashMap<&str, usize> = HashMap::new();
-//!
 //!     for _ in 0..100 {
 //!         let s = sw.next().unwrap();
 //!         println!("{}", s);
@@ -27,9 +25,11 @@
 
 use std::collections::HashMap;
 
+pub mod random_weight;
 pub mod roundrobin_weight;
 pub mod smooth_weight;
 
+pub use random_weight::*;
 pub use roundrobin_weight::*;
 pub use smooth_weight::*;
 

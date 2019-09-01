@@ -25,8 +25,6 @@ Using it is simple:
     sw.add("server1", 5);
     sw.add("server2", 2);
     sw.add("server3", 3);
-!
-    let mut results: HashMap<&str, usize> = HashMap::new();
 
     for _ in 0..100 {
         let s = sw.next().unwrap();
@@ -41,7 +39,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-weighted-rs = "0.1.0"
+weighted-rs = "0.1.1"
 ```
 
 
