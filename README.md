@@ -1,4 +1,4 @@
-# Rand
+# weight-rs
 
 [![Build Status](https://travis-ci.org/smallnest/weighted-rs.svg?branch=master)](https://travis-ci.org/smallnest/weighted-rs)
 [![Crate](https://img.shields.io/crates/v/weighted-rs.svg)](https://crates.io/crates/weighted-rs)
