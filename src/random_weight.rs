@@ -2,7 +2,7 @@ use super::Weight;
 use rand::prelude::{Rng, ThreadRng};
 use std::{collections::HashMap, hash::Hash};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 struct RandWeightItem<T> {
     item: T,
     weight: isize,
@@ -17,7 +17,7 @@ pub struct RandWeight<T> {
     r: ThreadRng,
 }
 
-impl<T: Copy + PartialEq + Eq + Hash> RandWeight<T> {
+impl<T: Clone + PartialEq + Eq + Hash> RandWeight<T> {
     pub fn new() -> Self {
         RandWeight {
             items: Vec::new(),
@@ -28,7 +28,7 @@ impl<T: Copy + PartialEq + Eq + Hash> RandWeight<T> {
     }
 }
 
-impl<T: Copy + PartialEq + Eq + Hash> Weight for RandWeight<T> {
+impl<T: Clone + PartialEq + Eq + Hash> Weight for RandWeight<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
@@ -36,18 +36,18 @@ impl<T: Copy + PartialEq + Eq + Hash> Weight for RandWeight<T> {
             return None;
         }
         if self.n == 1 {
-            return Some(self.items[0].item);
+            return Some(self.items[0].item.clone());
         }
 
         let mut index = self.r.gen_range(0, self.sum_of_weights);
         for item in &self.items {
             index -= item.weight;
             if index <= 0 {
-                return Some(item.item);
+                return Some(item.item.clone());
             }
         }
 
-        Some(self.items[self.n - 1].item)
+        Some(self.items[self.n - 1].item.clone())
     }
     // add adds a weighted item for selection.
     fn add(&mut self, item: T, weight: isize) {
@@ -62,7 +62,7 @@ impl<T: Copy + PartialEq + Eq + Hash> Weight for RandWeight<T> {
     fn all(&self) -> HashMap<T, isize> {
         let mut rt: HashMap<T, isize> = HashMap::new();
         for w in &self.items {
-            rt.insert(w.item, w.weight);
+            rt.insert(w.item.clone(), w.weight);
         }
         rt
     }

@@ -1,7 +1,7 @@
 use super::Weight;
 use std::{collections::HashMap, hash::Hash};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 struct SmoothWeightItem<T> {
     item: T,
     weight: isize,
@@ -24,7 +24,7 @@ pub struct SmoothWeight<T> {
     n: isize,
 }
 
-impl<T: Copy + PartialEq + Eq + Hash> SmoothWeight<T> {
+impl<T: Clone + PartialEq + Eq + Hash> SmoothWeight<T> {
     pub fn new() -> Self {
         SmoothWeight {
             items: Vec::new(),
@@ -36,7 +36,7 @@ impl<T: Copy + PartialEq + Eq + Hash> SmoothWeight<T> {
     fn next_smooth_weighted(&mut self) -> Option<SmoothWeightItem<T>> {
         let mut total = 0;
 
-        let mut best = self.items[0];
+        let mut best = self.items[0].clone();
         let mut best_index = 0;
         let mut found = false;
 
@@ -49,7 +49,7 @@ impl<T: Copy + PartialEq + Eq + Hash> SmoothWeight<T> {
             }
 
             if !found || self.items[i].current_weight > best.current_weight {
-                best = self.items[i];
+                best = self.items[i].clone();
                 found = true;
                 best_index = i;
             }
@@ -64,7 +64,7 @@ impl<T: Copy + PartialEq + Eq + Hash> SmoothWeight<T> {
     }
 }
 
-impl<T: Copy + PartialEq + Eq + Hash> Weight for SmoothWeight<T> {
+impl<T: Clone + PartialEq + Eq + Hash> Weight for SmoothWeight<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
@@ -72,7 +72,7 @@ impl<T: Copy + PartialEq + Eq + Hash> Weight for SmoothWeight<T> {
             return None;
         }
         if self.n == 1 {
-            return Some(self.items[0].item);
+            return Some(self.items[0].item.clone());
         }
 
         let rt = self.next_smooth_weighted()?;
@@ -95,7 +95,7 @@ impl<T: Copy + PartialEq + Eq + Hash> Weight for SmoothWeight<T> {
     fn all(&self) -> HashMap<T, isize> {
         let mut rt: HashMap<T, isize> = HashMap::new();
         for w in &self.items {
-            rt.insert(w.item, w.weight);
+            rt.insert(w.item.clone(), w.weight);
         }
         rt
     }

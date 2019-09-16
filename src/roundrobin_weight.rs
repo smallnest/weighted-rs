@@ -2,7 +2,7 @@ use std::{collections::HashMap, hash::Hash};
 
 use super::Weight;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 struct RRWeightItem<T> {
     item: T,
     weight: isize,
@@ -23,7 +23,7 @@ pub struct RoundrobinWeight<T> {
     cw: isize,
 }
 
-impl<T: Copy + PartialEq + Eq + Hash> RoundrobinWeight<T> {
+impl<T: Clone + PartialEq + Eq + Hash> RoundrobinWeight<T> {
     pub fn new() -> Self {
         RoundrobinWeight {
             items: Vec::new(),
@@ -36,7 +36,7 @@ impl<T: Copy + PartialEq + Eq + Hash> RoundrobinWeight<T> {
     }
 }
 
-impl<T: Copy + PartialEq + Eq + Hash> Weight for RoundrobinWeight<T> {
+impl<T: Clone + PartialEq + Eq + Hash> Weight for RoundrobinWeight<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
@@ -45,7 +45,7 @@ impl<T: Copy + PartialEq + Eq + Hash> Weight for RoundrobinWeight<T> {
         }
 
         if self.n == 1 {
-            return Some(self.items[0].item);
+            return Some(self.items[0].item.clone());
         }
 
         loop {
@@ -61,7 +61,7 @@ impl<T: Copy + PartialEq + Eq + Hash> Weight for RoundrobinWeight<T> {
             }
 
             if self.items[self.i as usize].weight >= self.cw {
-                return Some(self.items[self.i as usize].item);
+                return Some(self.items[self.i as usize].item.clone());
             }
         }
     }
@@ -91,7 +91,7 @@ impl<T: Copy + PartialEq + Eq + Hash> Weight for RoundrobinWeight<T> {
     fn all(&self) -> HashMap<T, isize> {
         let mut rt: HashMap<T, isize> = HashMap::new();
         for w in &self.items {
-            rt.insert(w.item, w.weight);
+            rt.insert(w.item.clone(), w.weight);
         }
         rt
     }
