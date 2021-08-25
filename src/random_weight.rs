@@ -39,7 +39,7 @@ impl<T: Clone + PartialEq + Eq + Hash> Weight for RandWeight<T> {
             return Some(self.items[0].item.clone());
         }
 
-        let mut index = self.r.gen_range(0, self.sum_of_weights);
+        let mut index = self.r.gen_range(0..self.sum_of_weights);
         for item in &self.items {
             index -= item.weight;
             if index <= 0 {
