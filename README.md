@@ -18,7 +18,7 @@ The random algorithm is not smooth although it follows weight configuration.
 
 Using it is simple:
 ```rust
-    use weighted-rs::{SmoothWeight, Weight};
+    use weighted_rs::{SmoothWeight, Weight};
     use std::collections::HashMap;
 
     let mut sw: SmoothWeight<&str> = SmoothWeight::new();
