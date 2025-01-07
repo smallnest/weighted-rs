@@ -23,8 +23,6 @@
 //!     }
 //! ```
 
-use std::collections::HashMap;
-
 pub mod random_weight;
 pub mod roundrobin_weight;
 pub mod smooth_weight;
@@ -33,21 +31,17 @@ pub use random_weight::*;
 pub use roundrobin_weight::*;
 pub use smooth_weight::*;
 
-// A common trait for weight algorithm.
-pub trait Weight {
-    type Item;
-
-    // next gets next selected item.
-    fn next(&mut self) -> Option<Self::Item>;
-    // add adds a weighted item for selection.
+/// A common trait for weight algorithm.
+pub trait Weight: Iterator {
+    /// adds a weighted item for selection.
     fn add(&mut self, item: Self::Item, weight: isize);
 
-    // all returns all items.
-    fn all(&self) -> HashMap<Self::Item, isize>;
+    /// returns all items.
+    fn all(&self) -> impl Iterator<Item = (Self::Item, isize)> + '_;
 
-    // remove_all removes all weighted items.
+    /// removes all weighted items.
     fn remove_all(&mut self);
 
-    // reset resets the balancing algorithm.
+    /// resets the balancing algorithm.
     fn reset(&mut self);
 }

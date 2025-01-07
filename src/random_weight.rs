@@ -1,6 +1,5 @@
 use super::Weight;
 use rand::prelude::{Rng, ThreadRng};
-use std::{collections::HashMap, hash::Hash};
 
 #[derive(Clone, Debug)]
 struct RandWeightItem<T> {
@@ -12,31 +11,50 @@ struct RandWeightItem<T> {
 #[derive(Default)]
 pub struct RandWeight<T> {
     items: Vec<RandWeightItem<T>>,
-    n: usize,
     sum_of_weights: isize,
     r: ThreadRng,
 }
 
-impl<T: Clone + PartialEq + Eq + Hash> RandWeight<T> {
+impl<T: Clone> RandWeight<T> {
     pub fn new() -> Self {
         RandWeight {
             items: Vec::new(),
-            n: 0,
             sum_of_weights: 0,
             r: rand::thread_rng(),
         }
     }
 }
 
-impl<T: Clone + PartialEq + Eq + Hash> Weight for RandWeight<T> {
+impl<T: Clone> Weight for RandWeight<T> {
+    fn add(&mut self, item: T, weight: isize) {
+        let weight_item = RandWeightItem { item, weight };
+
+        self.items.push(weight_item);
+        self.sum_of_weights += weight;
+    }
+
+    fn all(&self) -> impl Iterator<Item = (Self::Item, isize)> + '_ {
+        self.items
+            .iter()
+            .map(|item| (item.item.clone(), item.weight))
+    }
+
+    fn remove_all(&mut self) {
+        self.items.clear();
+        self.r = rand::thread_rng();
+    }
+
+    fn reset(&mut self) {
+        self.r = rand::thread_rng();
+    }
+}
+
+impl<T: Clone> Iterator for RandWeight<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        if self.n == 0 {
-            return None;
-        }
-        if self.n == 1 {
-            return Some(self.items[0].item.clone());
+        if self.items.len() <= 1 {
+            return self.items.first().map(|item| item.item.clone());
         }
 
         let mut index = self.r.gen_range(0..self.sum_of_weights);
@@ -47,36 +65,7 @@ impl<T: Clone + PartialEq + Eq + Hash> Weight for RandWeight<T> {
             }
         }
 
-        Some(self.items[self.n - 1].item.clone())
-    }
-    // add adds a weighted item for selection.
-    fn add(&mut self, item: T, weight: isize) {
-        let weight_item = RandWeightItem { item, weight };
-
-        self.items.push(weight_item);
-        self.n += 1;
-        self.sum_of_weights += weight;
-    }
-
-    // all returns all items.
-    fn all(&self) -> HashMap<T, isize> {
-        let mut rt: HashMap<T, isize> = HashMap::new();
-        for w in &self.items {
-            rt.insert(w.item.clone(), w.weight);
-        }
-        rt
-    }
-
-    // remove_all removes all weighted items.
-    fn remove_all(&mut self) {
-        self.items.clear();
-        self.n = 0;
-        self.r = rand::thread_rng();
-    }
-
-    // reset resets the balancing algorithm.
-    fn reset(&mut self) {
-        self.r = rand::thread_rng();
+        self.items.last().map(|item| item.item.clone())
     }
 }
 
