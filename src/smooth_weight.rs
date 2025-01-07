@@ -1,5 +1,4 @@
 use super::Weight;
-use std::{collections::HashMap, hash::Hash};
 
 #[derive(Clone, Debug)]
 struct SmoothWeightItem<T> {
@@ -9,34 +8,30 @@ struct SmoothWeightItem<T> {
     effective_weight: isize,
 }
 
-// SW (Smooth Weighted) is a struct that contains weighted items and provides methods to select a
-// weighted item. It is used for the smooth weighted round-robin balancing algorithm. This algorithm
-// is implemented in Nginx: https://github.com/phusion/nginx/commit/27e94984486058d73157038f7950a0a36ecc6e35.
-// Algorithm is as follows: on each peer selection we increase current_weight
-// of each eligible peer by its weight, select peer with greatest current_weight
-// and reduce its current_weight by total number of weight points distributed
-// among peers.
-// In case of { 5, 1, 1 } weights this gives the following sequence of
-// current_weight's: (a, a, b, a, c, a, a)
+/// SW (Smooth Weighted) is a struct that contains weighted items and provides methods to select a
+/// weighted item. It is used for the smooth weighted round-robin balancing algorithm. This
+/// algorithm is implemented in Nginx: https://github.com/phusion/nginx/commit/27e94984486058d73157038f7950a0a36ecc6e35.
+/// Algorithm is as follows: on each peer selection we increase current_weight
+/// of each eligible peer by its weight, select peer with greatest current_weight
+/// and reduce its current_weight by total number of weight points distributed
+/// among peers.
+///
+/// In case of { 5, 1, 1 } weights this gives the following sequence of
+/// current_weight's: (a, a, b, a, c, a, a)
 #[derive(Default)]
 pub struct SmoothWeight<T> {
     items: Vec<SmoothWeightItem<T>>,
-    n: isize,
 }
 
-impl<T: Clone + PartialEq + Eq + Hash> SmoothWeight<T> {
-    pub fn new() -> Self {
-        SmoothWeight {
-            items: Vec::new(),
-            n: 0,
-        }
+impl<T: Clone> SmoothWeight<T> {
+    pub const fn new() -> Self {
+        SmoothWeight { items: Vec::new() }
     }
 
     //https://github.com/phusion/nginx/commit/27e94984486058d73157038f7950a0a36ecc6e35
     fn next_smooth_weighted(&mut self) -> Option<SmoothWeightItem<T>> {
         let mut total = 0;
 
-        let mut best = self.items[0].clone();
         let mut best_index = 0;
         let mut found = false;
 
@@ -48,8 +43,7 @@ impl<T: Clone + PartialEq + Eq + Hash> SmoothWeight<T> {
                 self.items[i].effective_weight += 1;
             }
 
-            if !found || self.items[i].current_weight > best.current_weight {
-                best = self.items[i].clone();
+            if !found || self.items[i].current_weight > self.items[best_index].current_weight {
                 found = true;
                 best_index = i;
             }
@@ -60,19 +54,16 @@ impl<T: Clone + PartialEq + Eq + Hash> SmoothWeight<T> {
         }
 
         self.items[best_index].current_weight -= total;
-        Some(best)
+        Some(self.items[best_index].clone())
     }
 }
 
-impl<T: Clone + PartialEq + Eq + Hash> Weight for SmoothWeight<T> {
+impl<T: Clone> Weight for SmoothWeight<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        if self.n == 0 {
-            return None;
-        }
-        if self.n == 1 {
-            return Some(self.items[0].item.clone());
+        if self.items.len() <= 1 {
+            return self.items.first().map(|item| item.item.clone());
         }
 
         let rt = self.next_smooth_weighted()?;
@@ -88,22 +79,18 @@ impl<T: Clone + PartialEq + Eq + Hash> Weight for SmoothWeight<T> {
         };
 
         self.items.push(weight_item);
-        self.n += 1;
     }
 
     // all returns all items.
-    fn all(&self) -> HashMap<T, isize> {
-        let mut rt: HashMap<T, isize> = HashMap::new();
-        for w in &self.items {
-            rt.insert(w.item.clone(), w.weight);
-        }
-        rt
+    fn all(&self) -> impl Iterator<Item = (Self::Item, isize)> + '_ {
+        self.items
+            .iter()
+            .map(|item| (item.item.clone(), item.weight))
     }
 
     // remove_all removes all weighted items.
     fn remove_all(&mut self) {
         self.items.clear();
-        self.n = 0;
     }
 
     // reset resets the balancing algorithm.

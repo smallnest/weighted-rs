@@ -1,5 +1,3 @@
-use std::{collections::HashMap, hash::Hash};
-
 use super::Weight;
 
 #[derive(Clone, Debug)]
@@ -8,26 +6,25 @@ struct RRWeightItem<T> {
     weight: isize,
 }
 
-// RoundrobinWeight is a struct that contains weighted items implement LVS weighted round robin
-// algorithm.
-//
-// http://kb.linuxvirtualitem.org/wiki/Weighted_Round-Robin_Scheduling
-// http://zh.linuxvirtualitem.org/node/37
+/// RoundrobinWeight is a struct that contains weighted items implement LVS weighted round robin
+/// algorithm.
+///
+/// http://kb.linuxvirtualitem.org/wiki/Weighted_Round-Robin_Scheduling
+///
+/// http://zh.linuxvirtualitem.org/node/37
 #[derive(Debug, Default)]
 pub struct RoundrobinWeight<T> {
     items: Vec<RRWeightItem<T>>,
-    n: isize,
     gcd: isize,
     max_w: isize,
     i: isize,
     cw: isize,
 }
 
-impl<T: Clone + PartialEq + Eq + Hash> RoundrobinWeight<T> {
-    pub fn new() -> Self {
+impl<T: Clone> RoundrobinWeight<T> {
+    pub const fn new() -> Self {
         RoundrobinWeight {
             items: Vec::new(),
-            n: 0,
             gcd: 0,
             max_w: 0,
             i: 0,
@@ -36,20 +33,16 @@ impl<T: Clone + PartialEq + Eq + Hash> RoundrobinWeight<T> {
     }
 }
 
-impl<T: Clone + PartialEq + Eq + Hash> Weight for RoundrobinWeight<T> {
+impl<T: Clone> Weight for RoundrobinWeight<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        if self.n == 0 {
-            return None;
-        }
-
-        if self.n == 1 {
-            return Some(self.items[0].item.clone());
+        if self.items.len() <= 1 {
+            return self.items.first().map(|itme| itme.item.clone());
         }
 
         loop {
-            self.i = (self.i + 1) % self.n;
+            self.i = (self.i + 1) % (self.items.len() as isize);
             if self.i == 0 {
                 self.cw -= self.gcd;
                 if self.cw <= 0 {
@@ -84,29 +77,22 @@ impl<T: Clone + PartialEq + Eq + Hash> Weight for RoundrobinWeight<T> {
         }
 
         self.items.push(weight_item);
-        self.n += 1;
     }
 
-    // all returns all items.
-    fn all(&self) -> HashMap<T, isize> {
-        let mut rt: HashMap<T, isize> = HashMap::new();
-        for w in &self.items {
-            rt.insert(w.item.clone(), w.weight);
-        }
-        rt
+    fn all(&self) -> impl Iterator<Item = (Self::Item, isize)> + '_ {
+        self.items
+            .iter()
+            .map(|item| (item.item.clone(), item.weight))
     }
 
-    // remove_all removes all weighted items.
     fn remove_all(&mut self) {
         self.items.clear();
-        self.n = 0;
         self.gcd = 0;
         self.max_w = 0;
         self.i = -1;
         self.cw = 0;
     }
 
-    // reset resets the balancing algorithm.
     fn reset(&mut self) {
         self.i = -1;
         self.cw = 0;
