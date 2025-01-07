@@ -32,11 +32,7 @@ pub use roundrobin_weight::*;
 pub use smooth_weight::*;
 
 /// A common trait for weight algorithm.
-pub trait Weight {
-    type Item;
-
-    /// gets next selected item.
-    fn next(&mut self) -> Option<Self::Item>;
+pub trait Weight: Iterator {
     /// adds a weighted item for selection.
     fn add(&mut self, item: Self::Item, weight: isize);
 

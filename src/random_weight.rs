@@ -26,24 +26,6 @@ impl<T: Clone> RandWeight<T> {
 }
 
 impl<T: Clone> Weight for RandWeight<T> {
-    type Item = T;
-
-    fn next(&mut self) -> Option<T> {
-        if self.items.len() <= 1 {
-            return self.items.first().map(|item| item.item.clone());
-        }
-
-        let mut index = self.r.gen_range(0..self.sum_of_weights);
-        for item in &self.items {
-            index -= item.weight;
-            if index <= 0 {
-                return Some(item.item.clone());
-            }
-        }
-
-        self.items.last().map(|item| item.item.clone())
-    }
-
     fn add(&mut self, item: T, weight: isize) {
         let weight_item = RandWeightItem { item, weight };
 
@@ -62,9 +44,28 @@ impl<T: Clone> Weight for RandWeight<T> {
         self.r = rand::thread_rng();
     }
 
-    // reset resets the balancing algorithm.
     fn reset(&mut self) {
         self.r = rand::thread_rng();
+    }
+}
+
+impl<T: Clone> Iterator for RandWeight<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        if self.items.len() <= 1 {
+            return self.items.first().map(|item| item.item.clone());
+        }
+
+        let mut index = self.r.gen_range(0..self.sum_of_weights);
+        for item in &self.items {
+            index -= item.weight;
+            if index <= 0 {
+                return Some(item.item.clone());
+            }
+        }
+
+        self.items.last().map(|item| item.item.clone())
     }
 }
 

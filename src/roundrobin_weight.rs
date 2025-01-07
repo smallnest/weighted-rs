@@ -34,31 +34,6 @@ impl<T: Clone> RoundrobinWeight<T> {
 }
 
 impl<T: Clone> Weight for RoundrobinWeight<T> {
-    type Item = T;
-
-    fn next(&mut self) -> Option<T> {
-        if self.items.len() <= 1 {
-            return self.items.first().map(|itme| itme.item.clone());
-        }
-
-        loop {
-            self.i = (self.i + 1) % (self.items.len() as isize);
-            if self.i == 0 {
-                self.cw -= self.gcd;
-                if self.cw <= 0 {
-                    self.cw = self.max_w;
-                    if self.cw == 0 {
-                        return None;
-                    }
-                }
-            }
-
-            if self.items[self.i as usize].weight >= self.cw {
-                return Some(self.items[self.i as usize].item.clone());
-            }
-        }
-    }
-    // add adds a weighted item for selection.
     fn add(&mut self, item: T, weight: isize) {
         let weight_item = RRWeightItem { item, weight };
 
@@ -96,6 +71,33 @@ impl<T: Clone> Weight for RoundrobinWeight<T> {
     fn reset(&mut self) {
         self.i = -1;
         self.cw = 0;
+    }
+}
+
+impl<T: Clone> Iterator for RoundrobinWeight<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        if self.items.len() <= 1 {
+            return self.items.first().map(|itme| itme.item.clone());
+        }
+
+        loop {
+            self.i = (self.i + 1) % (self.items.len() as isize);
+            if self.i == 0 {
+                self.cw -= self.gcd;
+                if self.cw <= 0 {
+                    self.cw = self.max_w;
+                    if self.cw == 0 {
+                        return None;
+                    }
+                }
+            }
+
+            if self.items[self.i as usize].weight >= self.cw {
+                return Some(self.items[self.i as usize].item.clone());
+            }
+        }
     }
 }
 

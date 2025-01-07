@@ -59,17 +59,6 @@ impl<T: Clone> SmoothWeight<T> {
 }
 
 impl<T: Clone> Weight for SmoothWeight<T> {
-    type Item = T;
-
-    fn next(&mut self) -> Option<T> {
-        if self.items.len() <= 1 {
-            return self.items.first().map(|item| item.item.clone());
-        }
-
-        let rt = self.next_smooth_weighted()?;
-        Some(rt.item)
-    }
-    // add adds a weighted item for selection.
     fn add(&mut self, item: T, weight: isize) {
         let weight_item = SmoothWeightItem {
             item,
@@ -81,24 +70,34 @@ impl<T: Clone> Weight for SmoothWeight<T> {
         self.items.push(weight_item);
     }
 
-    // all returns all items.
     fn all(&self) -> impl Iterator<Item = (Self::Item, isize)> + '_ {
         self.items
             .iter()
             .map(|item| (item.item.clone(), item.weight))
     }
 
-    // remove_all removes all weighted items.
     fn remove_all(&mut self) {
         self.items.clear();
     }
 
-    // reset resets the balancing algorithm.
     fn reset(&mut self) {
         for w in &mut self.items {
             w.current_weight = 0;
             w.effective_weight = w.weight;
         }
+    }
+}
+
+impl<T: Clone> Iterator for SmoothWeight<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        if self.items.len() <= 1 {
+            return self.items.first().map(|item| item.item.clone());
+        }
+
+        let rt = self.next_smooth_weighted()?;
+        Some(rt.item)
     }
 }
 
